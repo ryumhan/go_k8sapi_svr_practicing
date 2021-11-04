@@ -1,4 +1,4 @@
-package oncueResource
+package restApi
 
 import (
 	"net/http"
@@ -8,25 +8,25 @@ import (
 )
 
 //OnCue
-type OnCueResource struct {
+type BasicResource struct {
 }
 
-func (OnCueResource) Uri() string {
+func (BasicResource) Uri() string {
 	return "/oncue"
 }
 
-func (OnCueResource) Get(rw http.ResponseWriter, r *http.Request, ps httprouter.Params) ServerPropsType.Response {
+func (BasicResource) Get(rw http.ResponseWriter, r *http.Request, ps httprouter.Params) ServerPropsType.Response {
 	return ServerPropsType.Response{200, "This is K8S-OnCue Rest API Server, This Server Support", "data"}
 }
 
-func (OnCueResource) Post(rw http.ResponseWriter, r *http.Request, ps httprouter.Params) ServerPropsType.Response {
+func (BasicResource) Post(rw http.ResponseWriter, r *http.Request, ps httprouter.Params) ServerPropsType.Response {
 	return ServerPropsType.Response{200, "This is K8S-OnCue Rest API Server, This Server Support", "data"}
 }
 
-func (OnCueResource) Put(rw http.ResponseWriter, r *http.Request, ps httprouter.Params) ServerPropsType.Response {
+func (BasicResource) Put(rw http.ResponseWriter, r *http.Request, ps httprouter.Params) ServerPropsType.Response {
 	return ServerPropsType.Response{200, "This is K8S-OnCue Rest API Server, This Server Support", "data"}
 }
 
-func (OnCueResource) Delete(rw http.ResponseWriter, r *http.Request, ps httprouter.Params) ServerPropsType.Response {
+func (BasicResource) Delete(rw http.ResponseWriter, r *http.Request, ps httprouter.Params) ServerPropsType.Response {
 	return ServerPropsType.Response{200, "This is K8S-OnCue Rest API Server, This Server Support", "data"}
 }

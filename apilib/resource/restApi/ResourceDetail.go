@@ -1,4 +1,4 @@
-package oncueResource
+package restApi
 
 import (
 	"net/http"
@@ -8,14 +8,14 @@ import (
 )
 
 //OnCue/:category
-type OnCueResourceDetail struct {
+type ResourceDetail struct {
 }
 
-func (OnCueResourceDetail) Uri() string {
+func (ResourceDetail) Uri() string {
 	return "/oncue/:category"
 }
 
-func (OnCueResourceDetail) Get(rw http.ResponseWriter, r *http.Request, ps httprouter.Params) ServerPropsType.Response {
+func (ResourceDetail) Get(rw http.ResponseWriter, r *http.Request, ps httprouter.Params) ServerPropsType.Response {
 	if category := ps.ByName("category"); category != "" {
 		return ServerPropsType.Response{200, "", "ServerPropsType.SupportData."}
 	}
@@ -23,7 +23,7 @@ func (OnCueResourceDetail) Get(rw http.ResponseWriter, r *http.Request, ps httpr
 	return ServerPropsType.Response{400, "", nil}
 }
 
-func (OnCueResourceDetail) Put(rw http.ResponseWriter, r *http.Request, ps httprouter.Params) ServerPropsType.Response {
+func (ResourceDetail) Put(rw http.ResponseWriter, r *http.Request, ps httprouter.Params) ServerPropsType.Response {
 	if category := ps.ByName("category"); category != "" {
 		return ServerPropsType.Response{200, "", "ServerPropsType.SupportData."}
 	}
@@ -31,7 +31,7 @@ func (OnCueResourceDetail) Put(rw http.ResponseWriter, r *http.Request, ps httpr
 	return ServerPropsType.Response{400, "", nil}
 }
 
-func (OnCueResourceDetail) Delete(rw http.ResponseWriter, r *http.Request, ps httprouter.Params) ServerPropsType.Response {
+func (ResourceDetail) Delete(rw http.ResponseWriter, r *http.Request, ps httprouter.Params) ServerPropsType.Response {
 	if category := ps.ByName("category"); category != "" {
 		return ServerPropsType.Response{200, "", "ServerPropsType.SupportData."}
 	}
@@ -39,6 +39,6 @@ func (OnCueResourceDetail) Delete(rw http.ResponseWriter, r *http.Request, ps ht
 	return ServerPropsType.Response{400, "", nil}
 }
 
-func (OnCueResourceDetail) Post(rw http.ResponseWriter, r *http.Request, ps httprouter.Params) ServerPropsType.Response {
+func (ResourceDetail) Post(rw http.ResponseWriter, r *http.Request, ps httprouter.Params) ServerPropsType.Response {
 	return ServerPropsType.Response{200, "This is K8S-OnCue Rest API Server, This Server Support", "data"}
 }

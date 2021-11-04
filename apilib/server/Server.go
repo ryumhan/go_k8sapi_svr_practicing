@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"oncue/apiserver/apilib"
-	"oncue/apiserver/apilib/resource"
+	ServerPropsType "oncue/apiserver/apilib"
+	ResourceField "oncue/apiserver/apilib/resource"
 
 	"github.com/julienschmidt/httprouter"
 )

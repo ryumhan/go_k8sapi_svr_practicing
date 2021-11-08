@@ -5,6 +5,7 @@ import (
 	ServerPropsType "oncue/apiserver/apilib"
 
 	"github.com/julienschmidt/httprouter"
+	"oncue/apiserver/apilib/k8sApi"
 )
 
 //OnCue/:category
@@ -17,7 +18,7 @@ func (ResourceDetail) Uri() string {
 
 func (ResourceDetail) Get(rw http.ResponseWriter, r *http.Request, ps httprouter.Params) ServerPropsType.Response {
 	if category := ps.ByName("category"); category != "" {
-		return ServerPropsType.Response{200, "", "ServerPropsType.SupportData."}
+		return k8sApi.GetApi(category)
 	}
 
 	return ServerPropsType.Response{400, "", nil}

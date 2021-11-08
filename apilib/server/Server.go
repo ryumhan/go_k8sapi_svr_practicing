@@ -2,7 +2,7 @@ package server
 
 import (
 	"encoding/json"
-	"fmt"
+	"log"
 	"net/http"
 	ServerPropsType "oncue/apiserver/apilib"
 	ResourceField "oncue/apiserver/apilib/resource"
@@ -15,7 +15,7 @@ func Abort(rw http.ResponseWriter, statusCode int) {
 }
 
 func AddResource(router *httprouter.Router, resource ResourceField.Resource) {
-	fmt.Println("\"" + resource.Uri() + "\" api is registerd")
+	log.Println("\"" + resource.Uri() + "\" api is registerd")
 
 	router.GET(resource.Uri(), func(rw http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		res := resource.Get(rw, r, ps)

@@ -20,13 +20,13 @@ func (BasicResource) Get(rw http.ResponseWriter, r *http.Request, ps httprouter.
 }
 
 func (BasicResource) Post(rw http.ResponseWriter, r *http.Request, ps httprouter.Params) ServerPropsType.Response {
-	return ServerPropsType.Response{200, "This is K8S-OnCue Rest API Server, This Server Support", "data"}
+	return ServerPropsType.Response{400, "Invalid Request", nil}
 }
 
 func (BasicResource) Put(rw http.ResponseWriter, r *http.Request, ps httprouter.Params) ServerPropsType.Response {
-	return ServerPropsType.Response{200, "This is K8S-OnCue Rest API Server, This Server Support", "data"}
+	return ServerPropsType.Response{400, "Invalid Request", nil}
 }
 
 func (BasicResource) Delete(rw http.ResponseWriter, r *http.Request, ps httprouter.Params) ServerPropsType.Response {
-	return ServerPropsType.Response{200, "This is K8S-OnCue Rest API Server, This Server Support", "data"}
+	return ServerPropsType.Response{400, "Invalid Request", nil}
 }

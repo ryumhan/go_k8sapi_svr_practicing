@@ -6,6 +6,8 @@ type Response struct {
 	Data    interface{} `json:"data"`
 }
 
+type Data map[string] interface{}
+
 // user string array
 type SupportData struct {
 	configmap      struct{}

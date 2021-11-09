@@ -4,8 +4,8 @@ import (
 	"net/http"
 	ServerPropsType "oncue/apiserver/apilib"
 
-	"github.com/julienschmidt/httprouter"
 	"oncue/apiserver/apilib/k8sApi"
+	"github.com/julienschmidt/httprouter"
 )
 
 //OnCue/:category
@@ -33,13 +33,9 @@ func (ResourceDetail) Put(rw http.ResponseWriter, r *http.Request, ps httprouter
 }
 
 func (ResourceDetail) Delete(rw http.ResponseWriter, r *http.Request, ps httprouter.Params) ServerPropsType.Response {
-	if category := ps.ByName("category"); category != "" {
-		return ServerPropsType.Response{200, "", "ServerPropsType.SupportData."}
-	}
-
-	return ServerPropsType.Response{400, "", nil}
+	return ServerPropsType.Response{400, "Invalid Request", nil}
 }
 
 func (ResourceDetail) Post(rw http.ResponseWriter, r *http.Request, ps httprouter.Params) ServerPropsType.Response {
-	return ServerPropsType.Response{200, "This is K8S-OnCue Rest API Server, This Server Support", "data"}
+	return ServerPropsType.Response{400, "Invalid Request", nil}
 }

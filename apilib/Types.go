@@ -6,7 +6,14 @@ type Response struct {
 	Data    interface{} `json:"data"`
 }
 
-type Data map[string] interface{}
+type ImageSpec struct {
+	ApiVersion string      `json:"apiVersion"`
+	Kind       string      `json:"kind"`
+	Metadata   interface{} `json:"metadata"`
+	Spec       interface{} `json:"spec"`
+}
+
+type Data map[string]interface{}
 
 // user string array
 type SupportData struct {

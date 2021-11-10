@@ -2,7 +2,7 @@ package k8sApi
 
 import (
 	"context"
-
+	"encoding/json"
 	"flag"
 	"log"
 	"path/filepath"
@@ -61,7 +61,7 @@ func GetApi(category string) ServerPropsType.Response {
 	case category == "configManifest":
 		return getConfigMap()
 	case category == "images":
-		return getConfigMap()
+		return getCustomImageMap()
 	case category == "schema":
 		return getConfigMap()
 	case category == "deployment":
@@ -80,7 +80,7 @@ func PutApi(category string) ServerPropsType.Response {
 	case category == "configManifest":
 		return getConfigMap()
 	case category == "images":
-		return getConfigMap()
+		return getCustomImageMap()
 	case category == "schema":
 		return getConfigMap()
 	case category == "deployment":
@@ -104,37 +104,46 @@ func getConfigMap() ServerPropsType.Response {
 	for _, v := range configmaps.Items {
 		if len(v.Data["config.toml"]) > 0 {
 			configs[v.ObjectMeta.Name] = v.Data["config.toml"]
+			log.Println("Load Config - ", v.ObjectMeta.Name)
 		} else if v.ObjectMeta.Name == "oncue-script" {
 			configs["oncue-script"] = v.Data
+			log.Println("Load Config - ", v.ObjectMeta.Name)
 		}
 	}
 
 	log.Printf("There are %d configmaps in the cluster\n", len(configs))
-	// var str, _ = json.Marshal(configs)
 	return ServerPropsType.Response{400, "Config & Script", configs}
 }
 
 func getCustomImageMap() ServerPropsType.Response {
+	data, err := clientset.RESTClient().Get().AbsPath("apis/oncue.sdplex.com/v1").Namespace("oncue").Resource("images").DoRaw(context.TODO())
+	if err != nil {
+		panic(err.Error())
+	}
 
-	// // get configmaps in "oncue" namespace.
-	// configmaps, err := clientset.
-	// if err != nil {
-	// 	panic(err.Error())
-	// }
+	// encode binary to struct type.
+	var encoded *v1.ComponentStatusList
+	err = json.Unmarshal(data, &encoded)
+	if err != nil {
+		panic(err.Error())
+	}
 
-	// configs := make(map[string]interface{})
-	// // parsing the config data.
-	// for _, v := range configmaps.Items {
-	// 	if len(v.Data["config.toml"]) > 0 {
-	// 		configs[v.ObjectMeta.Name] = v.Data["config.toml"]
-	// 	} else if v.ObjectMeta.Name == "oncue-script" {
-	// 		configs["oncue-script"] = v.Data
-	// 	}
-	// }
+	// parsing the config data.
+	images := make(map[string]interface{})
+	for _, v := range encoded.Items {
+		name := v.ObjectMeta.Name
+		annotation := v.GetAnnotations()["kubectl.kubernetes.io/last-applied-configuration"]
+		jsonString := []byte(annotation)
 
-	// log.Printf("There are %d configmaps in the cluster\n", len(configs))
-	// // var str, _ = json.Marshal(configs)
-	return ServerPropsType.Response{400, "Config & Script", "configs"}
+		var imagemeta ServerPropsType.ImageSpec
+		err = json.Unmarshal(jsonString, &imagemeta)
+
+		images[name] = imagemeta.Spec
+		log.Println("Load Image - ", name)
+	}
+
+	log.Printf("There are %d images in the cluster\n", len(images))
+	return ServerPropsType.Response{400, "Config & Script", images}
 }
 
 func getSchema() ServerPropsType.Response {

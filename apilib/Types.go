@@ -6,31 +6,26 @@ type Response struct {
 	Data    interface{} `json:"data"`
 }
 
-type ImageSpec struct {
+type ApiMeta1 struct {
 	ApiVersion string      `json:"apiVersion"`
 	Kind       string      `json:"kind"`
 	Metadata   interface{} `json:"metadata"`
 	Spec       interface{} `json:"spec"`
 }
 
-type ApiMeta struct {
+type ApiMeta2 struct {
 	ApiVersion string      `json:"apiVersion"`
 	Kind       string      `json:"kind"`
 	Metadata   interface{} `json:"metadata"`
 	Data       interface{} `json:"data"`
 }
 
-type Data map[string]interface{}
-
-// user string array
-type SupportData struct {
-	configmap      struct{}
-	configManifest struct{}
-	images         struct{}
-	schema         struct{}
-	deployment     struct{}
-	deployManifest struct{}
+type DeploymentMeta struct {
+	Status int32  `json:"status"`
+	Config string `json:"config"`
 }
+
+type Data map[string]interface{}
 
 var ConfigManifest = `{
     "kind": "ConfigMap",
@@ -41,5 +36,81 @@ var ConfigManifest = `{
     },
     "data": {
         "config.toml": "undefined"
+    }
+}`
+
+var DeploymentManifest = `{
+    "apiVersion": "apps/v1",
+    "kind": "Deployment",
+    "metadata": {
+        "name": "undefined",
+        "namespace": "oncue"
+    },
+    "spec": {
+        "replicas": 1,
+        "selector": {
+            "matchLabels": {
+                "app": "undefined"
+            }
+        },
+        "template": {
+            "metadata": {
+                "annotations": {
+                    "sidecar.istio.io/inject": "false"
+                },
+                "labels": {
+                    "app": "undefined"
+                }
+            },
+            "spec": {
+                "containers": [
+                    {
+                        "name": "undefined",
+                        "image": "undefined",
+                        "volumeMounts": [
+                            {
+                                "name": "config-volume",
+                                "mountPath": "/var/lib/oncue/config"
+                            },
+                            {
+                                "name": "schema-volume",
+                                "mountPath": "/var/lib/oncue/schema"
+                            },
+                            {
+                                "name": "schema-volume",
+                                "mountPath": "/var/lib/oncue/schema"
+                            }
+                                        ]
+                }          
+                            ],
+                "volumes": [
+                    {
+                        "name": "config-volume",
+                        "configMap": {
+                            "name": "undefined"
+                        }
+                    },
+                    {
+                        "name": "script-volume",
+                        "configMap": {
+                            "name": "undefined"
+                        }
+                    },
+                    {
+                        "name": "schema-volume",
+                        "hostPath": {
+                            "path": "/var/lib/oncue/schema",
+                            "type": "Directory"
+                        }
+                    },
+                    {
+                        "name": "actcode",
+                        "secret": {"secretName": "actcode",
+                                   "defaultMode": 400
+                                   }
+                    }
+                ]
+            }
+        }
     }
 }`

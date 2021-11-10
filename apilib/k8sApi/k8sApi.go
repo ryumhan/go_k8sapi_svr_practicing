@@ -1,13 +1,16 @@
-package k8sApi
+package K8sApi
 
 import (
 	"context"
 	"encoding/json"
 	"flag"
+	"fmt"
 	"log"
+	"os"
 	"path/filepath"
 
 	ServerPropsType "oncue/apiserver/apilib"
+	Zip "oncue/apiserver/apilib/zip"
 
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -65,11 +68,11 @@ func GetApi(category string) ServerPropsType.Response {
 	case category == "schema":
 		return getSchema()
 	case category == "deployment":
-		return getConfigMap()
-	case category == "deployManifest":
-		return getConfigMap()
+		return getDeployment()
+	case category == "deploymanifest":
+		return getDeploymentManifest()
 	default:
-		return ServerPropsType.Response{200, "Not Supported", nil}
+		return ServerPropsType.Response{400, "Not Supported", nil}
 	}
 }
 
@@ -137,7 +140,7 @@ func getCustomImageMap() ServerPropsType.Response {
 		//make jsonstring
 		jsonString := []byte(annotation)
 
-		var imagemeta ServerPropsType.ImageSpec
+		var imagemeta ServerPropsType.ApiMeta1
 		err = json.Unmarshal(jsonString, &imagemeta)
 		if err != nil {
 			log.Print("Json.Unmarshal ERROR, imagemeta", imagemeta)
@@ -149,18 +152,13 @@ func getCustomImageMap() ServerPropsType.Response {
 	}
 
 	log.Printf("There are %d images in the cluster\n", len(images))
-	return ServerPropsType.Response{400, "Images", images}
-}
-
-func getSchema() ServerPropsType.Response {
-	// var str, _ = json.Marshal(configs)
-	return ServerPropsType.Response{200, "Config & Script", "configs"}
+	return ServerPropsType.Response{200, "Images", images}
 }
 
 func getConfigManifest() ServerPropsType.Response {
 	jsonString := []byte(ServerPropsType.ConfigManifest)
 
-	var configManifest ServerPropsType.ApiMeta
+	var configManifest ServerPropsType.ApiMeta2
 
 	err := json.Unmarshal(jsonString, &configManifest)
 	if err != nil {
@@ -170,4 +168,69 @@ func getConfigManifest() ServerPropsType.Response {
 
 	log.Print("getConfigManifest - ", configManifest)
 	return ServerPropsType.Response{200, "ConfigManifestFile", configManifest}
+}
+
+func getDeployment() ServerPropsType.Response {
+	// get configmaps in "oncue" namespace.
+	depList, err := clientset.AppsV1().Deployments("oncue").List(context.TODO(), metav1.ListOptions{})
+	if err != nil {
+		panic(err.Error())
+	}
+
+	deployments := make(map[string]ServerPropsType.DeploymentMeta)
+	// parsing the config data.
+	for _, v := range depList.Items {
+		//check configmap usage
+		volumes := v.Spec.Template.Spec.Volumes
+		if volumes[0].ConfigMap == nil {
+			continue
+		}
+
+		name := v.ObjectMeta.Name
+		status := v.Status.AvailableReplicas
+
+		var got ServerPropsType.DeploymentMeta
+		got.Status = status
+		got.Config = volumes[0].ConfigMap.Name
+
+		deployments[name] = got
+		log.Println("Load Pod - ", v.ObjectMeta.Name)
+	}
+
+	log.Printf("There are %d Pods in the cluster\n", len(deployments))
+	return ServerPropsType.Response{200, "Pods ", deployments}
+}
+
+func getDeploymentManifest() ServerPropsType.Response {
+	jsonString := []byte(ServerPropsType.DeploymentManifest)
+
+	var manifest ServerPropsType.ApiMeta1
+
+	err := json.Unmarshal(jsonString, &manifest)
+	if err != nil {
+		log.Print("Json.Unmarshal ERROR, configManifest", manifest)
+		panic(err.Error())
+	}
+
+	log.Print("getConfigManifest - ", manifest)
+	return ServerPropsType.Response{200, "ConfigManifestFile", manifest}
+}
+
+func getSchema() ServerPropsType.Response {
+	// List of Files to Zip
+	target := "/var/lib/oncue/schema/archive"
+	output := "schema.zip"
+	if err := Zip.ZipSource(target, output); err != nil {
+		panic(err)
+	}
+
+	fmt.Println("Zipped File in Local:", output)
+
+	//Read content as a byte array.
+	content, err := os.ReadFile("schema.zip")
+	if err != nil {
+		panic(err)
+	}
+
+	return ServerPropsType.Response{200, "Schema Data Sent, in a schema.zip", content}
 }

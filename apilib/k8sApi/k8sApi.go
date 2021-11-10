@@ -58,18 +58,18 @@ func GetApi(category string) ServerPropsType.Response {
 	switch {
 	case category == "configmap":
 		return getConfigMap()
-	case category == "configManifest":
-		return getConfigMap()
+	case category == "configmanifest":
+		return getConfigManifest()
 	case category == "images":
 		return getCustomImageMap()
 	case category == "schema":
-		return getConfigMap()
+		return getSchema()
 	case category == "deployment":
 		return getConfigMap()
 	case category == "deployManifest":
 		return getConfigMap()
 	default:
-		return ServerPropsType.Response{400, "", nil}
+		return ServerPropsType.Response{200, "Not Supported", nil}
 	}
 }
 
@@ -77,15 +77,15 @@ func PutApi(category string) ServerPropsType.Response {
 	switch {
 	case category == "configmap":
 		return getConfigMap()
-	case category == "configManifest":
-		return getConfigMap()
+	case category == "configmanifest":
+		return getConfigManifest()
 	case category == "images":
 		return getCustomImageMap()
 	case category == "schema":
 		return getConfigMap()
 	case category == "deployment":
 		return getConfigMap()
-	case category == "deployManifest":
+	case category == "deploymanifest":
 		return getConfigMap()
 	default:
 		return ServerPropsType.Response{400, "", nil}
@@ -112,7 +112,7 @@ func getConfigMap() ServerPropsType.Response {
 	}
 
 	log.Printf("There are %d configmaps in the cluster\n", len(configs))
-	return ServerPropsType.Response{400, "Config & Script", configs}
+	return ServerPropsType.Response{200, "ConfigMaps, OnCue-Script", configs}
 }
 
 func getCustomImageMap() ServerPropsType.Response {
@@ -125,6 +125,7 @@ func getCustomImageMap() ServerPropsType.Response {
 	var encoded *v1.ComponentStatusList
 	err = json.Unmarshal(data, &encoded)
 	if err != nil {
+		log.Print("Json.Unmarshal ERROR, *v1.ComponentStatusList", encoded)
 		panic(err.Error())
 	}
 
@@ -133,20 +134,40 @@ func getCustomImageMap() ServerPropsType.Response {
 	for _, v := range encoded.Items {
 		name := v.ObjectMeta.Name
 		annotation := v.GetAnnotations()["kubectl.kubernetes.io/last-applied-configuration"]
+		//make jsonstring
 		jsonString := []byte(annotation)
 
 		var imagemeta ServerPropsType.ImageSpec
 		err = json.Unmarshal(jsonString, &imagemeta)
+		if err != nil {
+			log.Print("Json.Unmarshal ERROR, imagemeta", imagemeta)
+			panic(err.Error())
+		}
 
 		images[name] = imagemeta.Spec
 		log.Println("Load Image - ", name)
 	}
 
 	log.Printf("There are %d images in the cluster\n", len(images))
-	return ServerPropsType.Response{400, "Config & Script", images}
+	return ServerPropsType.Response{400, "Images", images}
 }
 
 func getSchema() ServerPropsType.Response {
 	// var str, _ = json.Marshal(configs)
-	return ServerPropsType.Response{400, "Config & Script", "configs"}
+	return ServerPropsType.Response{200, "Config & Script", "configs"}
+}
+
+func getConfigManifest() ServerPropsType.Response {
+	jsonString := []byte(ServerPropsType.ConfigManifest)
+
+	var configManifest ServerPropsType.ApiMeta
+
+	err := json.Unmarshal(jsonString, &configManifest)
+	if err != nil {
+		log.Print("Json.Unmarshal ERROR, configManifest", configManifest)
+		panic(err.Error())
+	}
+
+	log.Print("getConfigManifest - ", configManifest)
+	return ServerPropsType.Response{200, "ConfigManifestFile", configManifest}
 }

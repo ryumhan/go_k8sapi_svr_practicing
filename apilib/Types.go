@@ -6,6 +6,14 @@ type Response struct {
 	Data    interface{} `json:"data"`
 }
 
+type metadata struct {
+	Name string `json:"name"`
+}
+
+type config struct {
+	Config interface{} `json:"config.toml"`
+}
+
 type ApiMeta1 struct {
 	ApiVersion string      `json:"apiVersion"`
 	Kind       string      `json:"kind"`
@@ -14,10 +22,10 @@ type ApiMeta1 struct {
 }
 
 type ApiMeta2 struct {
-	ApiVersion string      `json:"apiVersion"`
-	Kind       string      `json:"kind"`
-	Metadata   interface{} `json:"metadata"`
-	Data       interface{} `json:"data"`
+	ApiVersion string   `json:"apiVersion"`
+	Kind       string   `json:"kind"`
+	Metadata   metadata `json:"metadata"`
+	Data       config   `json:"data"`
 }
 
 type DeploymentMeta struct {
@@ -114,3 +122,11 @@ var DeploymentManifest = `{
         }
     }
 }`
+
+func GetManifestConfigMap() {
+
+}
+
+func GetManifestDeployment() {
+
+}

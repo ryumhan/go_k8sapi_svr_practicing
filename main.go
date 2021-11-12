@@ -13,7 +13,7 @@ import (
 var test bool = false
 
 func main() {
-	router := httprouter.New()
+	router := httprouter.New()	
 
 	server.AddResource(router, new(restApi.BasicResource))
 	server.AddResource(router, new(restApi.ResourceDetail))

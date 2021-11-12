@@ -5,11 +5,11 @@ import (
 	"encoding/json"
 	"io"
 	"log"
-	"strings"
 
 	ServerPropsType "oncue/apiserver/apilib"
 
 	v1 "k8s.io/api/core/v1"
+	k8sError "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 )
@@ -52,33 +52,36 @@ func applyConfigMap(body io.ReadCloser) ServerPropsType.Response {
 		}
 
 		result, err := clientset.CoreV1().ConfigMaps("oncue").Patch(context.TODO(), name, types.MergePatchType, editedConfig, metav1.PatchOptions{})
-		if err != nil {
-			// normal error
-			if !strings.HasSuffix(err.Error(), "not found") {
-				log.Print("Patch ERROR - ", err.Error())
-				panic(err.Error())
-			}
-
-			// exist error.
-			var newConifg v1.ConfigMap
-
-			err := json.Unmarshal(editedConfig, &newConifg)
-			if err != nil {
-				log.Print("Json.Unmarshal ERROR, editedConfig, ", editedConfig)
-				panic(err.Error())
-			}
-
-			result, err := clientset.CoreV1().ConfigMaps("oncue").Create(context.TODO(), &newConifg, metav1.CreateOptions{})
-			if err != nil {
-				log.Print("ConfigMap Create ERROR")
-				panic(err.Error())
-			}
-
+		if err == nil {
+			// success patch
 			names = append(names, result.Name)
+			log.Print("Patch Success- ", result.Name)
 			continue
 		}
 
+		// another error
+		if !k8sError.IsNotFound(err) {
+			log.Print("Patch ERROR - ", err.Error())
+			panic(err.Error())
+		}
+
+		// exist error.
+		var newConifg v1.ConfigMap
+
+		err = json.Unmarshal(editedConfig, &newConifg)
+		if err != nil {
+			log.Print("Json.Unmarshal ERROR, editedConfig, ", editedConfig)
+			panic(err.Error())
+		}
+
+		result, err = clientset.CoreV1().ConfigMaps("oncue").Create(context.TODO(), &newConifg, metav1.CreateOptions{})
+		if err != nil {
+			log.Print("ConfigMap Create ERROR")
+			panic(err.Error())
+		}
+
 		names = append(names, result.Name)
+		log.Print("Create Success- ", result.Name)
 	}
 
 	log.Print("PUT - ConfigMap, ", names)
@@ -144,7 +147,7 @@ func applyScript(body io.ReadCloser) ServerPropsType.Response {
 	}
 
 	// normal error
-	if !strings.HasSuffix(err.Error(), "not found") {
+	if !k8sError.IsNotFound(err) {
 		log.Print("Patch ERROR - ", err.Error())
 		panic(err.Error())
 	}

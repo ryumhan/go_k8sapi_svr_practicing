@@ -28,6 +28,13 @@ type ApiMeta2 struct {
 	Data       config   `json:"data"`
 }
 
+type ApiMeta3 struct {
+	ApiVersion string      `json:"apiVersion"`
+	Kind       string      `json:"kind"`
+	Metadata   metadata    `json:"metadata"`
+	Data       interface{} `json:"data"`
+}
+
 type DeploymentMeta struct {
 	Status int32  `json:"status"`
 	Config string `json:"config"`

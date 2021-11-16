@@ -8,7 +8,8 @@ import (
 
 	ServerPropsType "oncue/apiserver/apilib"
 
-	v1 "k8s.io/api/core/v1"
+	v1 "k8s.io/api/apps/v1"
+	coreV1 "k8s.io/api/core/v1"
 	k8sError "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -20,7 +21,7 @@ func applyConfigMap(body io.ReadCloser) ServerPropsType.Response {
 
 	err := json.NewDecoder(body).Decode(&decoded)
 	if err != nil {
-		log.Print("Json Decode ERROR, Body - ", body)
+		log.Print("Json Decode ERROR, Body Has invalid Character - - ", body)
 		panic(err.Error())
 	}
 
@@ -66,7 +67,7 @@ func applyConfigMap(body io.ReadCloser) ServerPropsType.Response {
 		}
 
 		// exist error.
-		var newConifg v1.ConfigMap
+		var newConifg coreV1.ConfigMap
 
 		err = json.Unmarshal(editedConfig, &newConifg)
 		if err != nil {
@@ -89,10 +90,77 @@ func applyConfigMap(body io.ReadCloser) ServerPropsType.Response {
 }
 
 func applyDeployment(body io.ReadCloser) ServerPropsType.Response {
-	var decoded = make(map[string]interface{})
+	var names []string
+	var decoded = make(map[string]ServerPropsType.Deployment)
 
-	json.NewDecoder(body).Decode(&decoded)
+	err := json.NewDecoder(body).Decode(&decoded)
+	if err != nil {
+		log.Print("Json Decode ServerPropsType.Deployment Type ERROR, Body Has invalid Character - ", body)
+		panic(err.Error())
+	}
 
+	// get configmaps in "oncue" namespace.
+	for name := range decoded {
+		var image = decoded[name].Image
+		if image == "" {
+			log.Print("Invalid data request, Image value does not exist - ", decoded[name])
+			panic(err.Error())
+		}
+
+		var category = decoded[name].Category
+		if category == "" {
+			log.Print("Invalid data request, category value does not exist - ", decoded[name])
+			panic(err.Error())
+		}
+
+		var configmap = decoded[name].Configmap
+		if configmap == "" {
+			log.Print("Invalid data request, configmap value does not exist - ", decoded[name])
+			panic(err.Error())
+		}
+
+		deploymentManifest := ServerPropsType.MakeDeploymentManifest(name, image, configmap, category)
+		editedDeployment, err := json.Marshal(deploymentManifest)
+
+		log.Print("MadeDeploymentManifest, ", string(editedDeployment[:]))
+		if err != nil {
+			log.Print("Json.Marshal ERROR, deploymentManifest, ", deploymentManifest)
+			panic(err.Error())
+		}
+
+		result, err := clientset.AppsV1().Deployments("oncue").Patch(context.TODO(), name, types.MergePatchType, editedDeployment, metav1.PatchOptions{})
+		if err == nil {
+			// success patch
+			names = append(names, result.Name)
+			log.Print("Patch Success- ", result.Name)
+			continue
+		}
+
+		// another error
+		if !k8sError.IsNotFound(err) {
+			log.Print("Patch ERROR - ", err.Error())
+			panic(err.Error())
+		}
+
+		// exist error.
+		var newDeployment v1.Deployment
+		err = json.Unmarshal(editedDeployment, &newDeployment)
+		if err != nil {
+			log.Print("Json.Unmarshal ERROR, editedDeployment, ", editedDeployment)
+			panic(err.Error())
+		}
+
+		result, err = clientset.AppsV1().Deployments("oncue").Create(context.TODO(), &newDeployment, metav1.CreateOptions{})
+		if err != nil {
+			log.Print("Deployment Create ERROR")
+			panic(err.Error())
+		}
+
+		names = append(names, result.Name)
+		log.Print("Create Success- ", result.Name)
+	}
+
+	log.Print("PUT - Deployment, ", names)
 	return ServerPropsType.Response{200, "Applied ", nil}
 }
 
@@ -102,7 +170,7 @@ func applyScript(body io.ReadCloser) ServerPropsType.Response {
 
 	err := json.NewDecoder(body).Decode(&decoded)
 	if err != nil {
-		log.Print("Json Decode ERROR, Body - ", body)
+		log.Print("Json Decode ERROR, Body Has invalid Character - ", body)
 		panic(err.Error())
 	}
 
@@ -153,8 +221,7 @@ func applyScript(body io.ReadCloser) ServerPropsType.Response {
 	}
 
 	// Not Exist Error, Create new configmap.
-	var newConifg v1.ConfigMap
-
+	var newConifg coreV1.ConfigMap
 	err = json.Unmarshal(editedConfig, &newConifg)
 	if err != nil {
 		log.Print("Json.Unmarshal ERROR, editedConfig, ", newConifg)

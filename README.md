@@ -1,6 +1,6 @@
 # k8s_Simple_ApiServer
 
-Practicing for Using API library supported from k8s, OnCue resource can be accessed from this server.
+Practicing for Using API library supported from k8s, resources can be accessed from this server.
 
 - GoLang
 - Using K8s API lib

@@ -161,7 +161,7 @@ func applyDeployment(body io.ReadCloser) ServerPropsType.Response {
 	}
 
 	log.Print("PUT - Deployment, ", names)
-	return ServerPropsType.Response{200, "Applied ", nil}
+	return ServerPropsType.Response{200, "Applied ", names}
 }
 
 func applyScript(body io.ReadCloser) ServerPropsType.Response {

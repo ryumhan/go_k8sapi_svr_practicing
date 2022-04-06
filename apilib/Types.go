@@ -176,19 +176,17 @@ func MakeDeploymentManifest(name string, image string, configmap string, categor
 
 		container.VolumeMounts = append(container.VolumeMounts, configMount, schemaMount, scriptMount)
 
-		log.Printf("Container Made %+v\n", container)
-
 		deploymentManifest.Spec.Template.Spec.Containers = append(deploymentManifest.Spec.Template.Spec.Containers, container)
 		deploymentManifest.Spec.Template.Spec.Volumes = append(deploymentManifest.Spec.Template.Spec.Volumes, configVolumes, schemaVolumes, scriptVolumes, actcodeVolumes)
 	} else if category == "processor" {
 		container.VolumeMounts = append(container.VolumeMounts, configMount, schemaMount, scriptMount)
-		deploymentManifest.Spec.Template.Spec.Containers = append(deploymentManifest.Spec.Template.Spec.Containers, container)
 
+		deploymentManifest.Spec.Template.Spec.Containers = append(deploymentManifest.Spec.Template.Spec.Containers, container)
 		deploymentManifest.Spec.Template.Spec.Volumes = append(deploymentManifest.Spec.Template.Spec.Volumes, configVolumes, schemaVolumes, scriptVolumes)
 	} else {
 		container.VolumeMounts = append(container.VolumeMounts, configMount, schemaMount)
-		deploymentManifest.Spec.Template.Spec.Containers = append(deploymentManifest.Spec.Template.Spec.Containers, container)
 
+		deploymentManifest.Spec.Template.Spec.Containers = append(deploymentManifest.Spec.Template.Spec.Containers, container)
 		deploymentManifest.Spec.Template.Spec.Volumes = append(deploymentManifest.Spec.Template.Spec.Volumes, configVolumes, schemaVolumes)
 	}
 

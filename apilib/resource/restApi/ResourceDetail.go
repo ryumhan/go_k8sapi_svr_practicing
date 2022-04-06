@@ -18,7 +18,7 @@ func (ResourceDetail) Uri() string {
 }
 
 func (ResourceDetail) Get(rw http.ResponseWriter, r *http.Request, ps httprouter.Params) ServerPropsType.Response {
-	if category := ps.ByName("category"); category != "" {	
+	if category := ps.ByName("category"); category != "" {
 		return K8sApi.GetApi(category)
 	}
 
@@ -26,7 +26,7 @@ func (ResourceDetail) Get(rw http.ResponseWriter, r *http.Request, ps httprouter
 }
 
 func (ResourceDetail) Put(rw http.ResponseWriter, r *http.Request, ps httprouter.Params) ServerPropsType.Response {
-	if category := ps.ByName("category"); category != "" {				
+	if category := ps.ByName("category"); category != "" {
 		return K8sApi.PutApi(category, r.Body)
 	}
 

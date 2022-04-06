@@ -12,6 +12,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 	restclient "k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/util/homedir"
@@ -25,18 +26,21 @@ var (
 )
 
 func init() {
-	if home := homedir.HomeDir(); home != "" {
-		kubeconfig = flag.String("kubeconfig", filepath.Join(home, ".kube", "config"), "(optional) absolute path to the kubeconfig file")
+	var err error
+	var incluster bool
+
+	// parsing flag
+	flag.BoolVar(&incluster, "incluster", false, "Default : false")
+	if incluster {
+		config = getClusterConfig()
 	} else {
-		kubeconfig = flag.String("kubeconfig", "", "absolute path to the kubeconfig file")
+		config = getKubeConfig()
 	}
 
 	flag.Parse()
-
-	var err error
-	config, err = clientcmd.BuildConfigFromFlags("", *kubeconfig)
+	// error check.
 	if err != nil {
-		panic(err)
+		panic(err.Error())
 	}
 
 	// creates the clientset
@@ -54,11 +58,37 @@ func init() {
 	log.Print("k8sApi Imported - got Pods ", len(pods.Items))
 }
 
+func getClusterConfig() *restclient.Config {
+	config, err := rest.InClusterConfig()
+	if err != nil {
+		panic(err.Error())
+	}
+
+	log.Print("k8sApi getClusterConfig, Incluster : true")
+	return config
+}
+
+func getKubeConfig() *restclient.Config {
+	if home := homedir.HomeDir(); home != "" {
+		kubeconfig = flag.String("kubeconfig", filepath.Join(home, ".kube", "config"), "(optional) absolute path to the kubeconfig file")
+	} else {
+		kubeconfig = flag.String("kubeconfig", "", "absolute path to the kubeconfig file")
+	}
+
+	config, err := clientcmd.BuildConfigFromFlags("", *kubeconfig)
+	if err != nil {
+		panic(err.Error())
+	}
+
+	log.Print("k8sApi getKubeConfig, Incluster : false")
+	return config
+}
+
 func GetApi(category string) ServerPropsType.Response {
 	switch {
-	case category == "configmap":
+	case category == "confimap":
 		return getConfigMap()
-	case category == "configmanifest":
+	case category == "configmanifes":
 		return getConfigManifest()
 	case category == "images":
 		return getCustomImageMap()
@@ -66,7 +96,7 @@ func GetApi(category string) ServerPropsType.Response {
 		return getSchema()
 	case category == "deployment":
 		return getDeployment()
-	case category == "deploymanifest":
+	case category == "deploymanifst":
 		return getDeploymentManifest()
 	default:
 		return ServerPropsType.Response{400, "Not Supported", nil}
